@@ -1,9 +1,8 @@
 package edu.illinois.cs.cs125.fall2020.mp.models;
 
 import androidx.annotation.NonNull;
-
 import com.github.wrdlbrnft.sortedlistadapter.SortedListAdapter;
-
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -69,20 +68,18 @@ public class Summary implements SortedListAdapter.ViewModel {
     return title;
   }
 
-  /**
-   * Create an empty Summary.
-   */
+  /** Create an empty Summary. */
   @SuppressWarnings({"unused", "RedundantSuppression"})
   public Summary() {}
 
   /**
    * Create a Summary with the provided fields.
    *
-   * @param setYear       the year for this Summary
-   * @param setSemester   the semester for this Summary
+   * @param setYear the year for this Summary
+   * @param setSemester the semester for this Summary
    * @param setDepartment the department for this Summary
-   * @param setNumber     the number for this Summary
-   * @param setTitle      the title for this Summary
+   * @param setNumber the number for this Summary
+   * @param setTitle the title for this Summary
    */
   public Summary(
       final String setYear,
@@ -97,9 +94,7 @@ public class Summary implements SortedListAdapter.ViewModel {
     title = setTitle;
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public boolean equals(final Object o) {
     if (!(o instanceof Summary)) {
@@ -112,35 +107,50 @@ public class Summary implements SortedListAdapter.ViewModel {
         && Objects.equals(number, course.number);
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public int hashCode() {
     return Objects.hash(year, semester, department, number);
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public <T> boolean isSameModelAs(@NonNull final T model) {
     return equals(model);
   }
 
-  /**
-   * {@inheritDoc}
-   */
+  /** {@inheritDoc} */
   @Override
   public <T> boolean isContentTheSameAs(@NonNull final T model) {
     return equals(model);
   }
 
-  public static final Comparator<Summary> COMPARATOR =
-      (courseModel1, courseModel2) -> 0;
+  /**
+   * @param course
+   * @return A String that formats the Summary object ex. CS 125:Introduction to Computer Science.
+   */
+  public static String fullCourseString(final Summary course) {
+    return course.department + " " + course.number + ": " + course.title;
+  }
 
+  /** Orders the list of Summary objects. */
+  public static final Comparator<Summary> COMPARATOR =
+      (courseModel1, courseModel2) ->
+          fullCourseString(courseModel1).compareTo(fullCourseString(courseModel2));
+
+  /**
+   * @param courses
+   * @param text
+   * @return A filtered List that contains a substring of the text parameter.
+   */
   public static List<Summary> filter(
       @NonNull final List<Summary> courses, @NonNull final String text) {
-    return courses;
+    List<Summary> output = new ArrayList<>();
+    for (Summary course : courses) {
+      if (fullCourseString(course).toLowerCase().indexOf(text.toLowerCase()) != -1) {
+        output.add(course);
+      }
+    }
+    return output;
   }
 }
