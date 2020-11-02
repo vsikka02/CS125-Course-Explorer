@@ -3,6 +3,7 @@ package edu.illinois.cs.cs125.fall2020.mp.network;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.android.volley.Cache;
+import com.android.volley.ExecutorDelivery;
 import com.android.volley.Network;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -18,6 +19,7 @@ import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.Executors;
 
 /**
  * Course API client.
@@ -87,6 +89,7 @@ public final class Client {
   }
 
   private static final int MAX_STARTUP_RETRIES = 8;
+  private static final int THREAD_POOL_SIZE = 4;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final RequestQueue requestQueue;
@@ -99,7 +102,12 @@ public final class Client {
     Cache cache = new NoCache();
     Network network = new BasicNetwork(new HurlStack());
     HttpURLConnection.setFollowRedirects(true);
-    requestQueue = new RequestQueue(cache, network);
+    requestQueue =
+        new RequestQueue(
+            cache,
+            network,
+            THREAD_POOL_SIZE,
+            new ExecutorDelivery(Executors.newSingleThreadExecutor()));
 
     // Configure the Jackson object mapper to ignore unknown properties
     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
