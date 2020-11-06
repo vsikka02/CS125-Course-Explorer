@@ -4,13 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.SearchView;
-
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
-
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.wrdlbrnft.sortedlistadapter.SortedListAdapter;
@@ -18,7 +14,6 @@ import edu.illinois.cs.cs125.fall2020.mp.R;
 import edu.illinois.cs.cs125.fall2020.mp.adapters.CourseListAdapter;
 import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
 import edu.illinois.cs.cs125.fall2020.mp.databinding.ActivityMainBinding;
-import edu.illinois.cs.cs125.fall2020.mp.models.Course;
 import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
 import edu.illinois.cs.cs125.fall2020.mp.network.Client;
 import java.util.Arrays;
@@ -45,7 +40,6 @@ public final class MainActivity extends AppCompatActivity
   // List of courses retrieved from the backend server
   @SuppressWarnings("FieldCanBeLocal")
   private List<Summary> courses;
-
 
   /**
    * Called when this activity is created.
@@ -151,8 +145,6 @@ public final class MainActivity extends AppCompatActivity
    *
    * @param course the course that was clicked
    */
-
-
   @Override
   public void onCourseClicked(final Summary course) {
     Log.d(TAG, "Clicked on " + course.getTitle());

@@ -35,6 +35,8 @@ public final class Server extends Dispatcher {
 
   private final Map<String, String> summaries = new HashMap<>();
 
+  //private final int courseUrlLength = 4;
+
   // summary/2020/fall
   private MockResponse getSummary(@NonNull final String path) {
     String[] parts = path.split("/");

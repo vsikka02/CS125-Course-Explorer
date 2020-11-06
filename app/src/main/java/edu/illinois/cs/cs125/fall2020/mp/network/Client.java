@@ -46,6 +46,12 @@ public final class Client {
      */
     default void summaryResponse(String year, String semester, Summary[] summaries) {}
 
+    /**
+     * Return a Course object (course) for the given Summary object (summary).
+     *
+     * @param summary
+     * @param course
+     */
     default void courseResponse(Summary summary, Course course) {}
   }
 
@@ -77,7 +83,13 @@ public final class Client {
     requestQueue.add(summaryRequest);
   }
 
-  public void getCourse(@NonNull Summary summary, @NonNull final CourseClientCallbacks callbacks) {
+  /**
+   * Retrieve the Course object for a given Summary object.
+   *
+   * @param summary the summary that needs to retrieve extra information
+   * @param callbacks the callback that will receive the result
+   */
+  public void getCourse(@NonNull final Summary summary, @NonNull final CourseClientCallbacks callbacks) {
     String url =
         CourseableApplication.SERVER_URL
             + "course/"
