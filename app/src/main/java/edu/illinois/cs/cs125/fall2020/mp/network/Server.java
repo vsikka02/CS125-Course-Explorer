@@ -39,7 +39,7 @@ public final class Server extends Dispatcher {
 
   private final Map<String, String> summaries = new HashMap<>();
 
-  private final int courseUrlLength = 4;
+  //private final int courseUrlLength = 4;
 
   // summary/2020/fall
   private MockResponse getSummary(@NonNull final String path) {
@@ -61,7 +61,7 @@ public final class Server extends Dispatcher {
   // course/year/semester/department/number
   private MockResponse getCourse(@NonNull final String path) {
     String[] parts = path.split("/");
-    if (parts.length != courseUrlLength) {
+    if (parts.length != 4) {
       return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
     }
     Summary searchSummary = new Summary(parts[0], parts[1], parts[2], parts[3], "searchSummary");
