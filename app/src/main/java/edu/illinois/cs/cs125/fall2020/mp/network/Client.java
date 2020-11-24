@@ -1,7 +1,10 @@
 package edu.illinois.cs.cs125.fall2020.mp.network;
 
 import android.util.Log;
+
 import androidx.annotation.NonNull;
+
+import com.android.volley.AuthFailureError;
 import com.android.volley.Cache;
 import com.android.volley.ExecutorDelivery;
 import com.android.volley.Network;
@@ -14,13 +17,16 @@ import com.android.volley.toolbox.StringRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
-import edu.illinois.cs.cs125.fall2020.mp.models.Course;
-import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
+
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.Executors;
+
+import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
+import edu.illinois.cs.cs125.fall2020.mp.models.Course;
+import edu.illinois.cs.cs125.fall2020.mp.models.Rating;
+import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
 
 /**
  * Course API client.
@@ -52,7 +58,9 @@ public final class Client {
      * @param summary
      * @param course
      */
-    default void courseResponse(Summary summary, Course course) {}
+    default void courseResponse(Summary summary, Course course) { }
+
+    default void yourRating(Summary summary, Rating rating) { }
   }
 
   /**
@@ -114,6 +122,46 @@ public final class Client {
             },
             error -> Log.e(TAG, error.toString()));
     requestQueue.add(courseRequest);
+  }
+
+  public void getRating(@NonNull final Summary summary, @NonNull final String clientID, @NonNull final CourseClientCallbacks callbacks){
+    String url = CourseableApplication.SERVER_URL + "rating/" + summary.getYear() + "/" + summary.getSemester() + "/" + summary.getDepartment() + "/" + summary.getNumber() + "?client=" + clientID;
+    StringRequest ratingRequest =
+            new StringRequest(
+                    Request.Method.GET,
+                    url,
+                    response -> {
+                      try {
+                        Rating ratingDetails = objectMapper.readValue(response, Rating.class);
+                        callbacks.yourRating(summary, ratingDetails);
+                      } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                      }
+                    },
+                    error -> Log.e(TAG, error.toString()));
+    requestQueue.add(ratingRequest);
+  }
+
+  public void postRating(@NonNull final Summary summary, @NonNull final Rating rating, @NonNull final CourseClientCallbacks callbacks){
+    String url = CourseableApplication.SERVER_URL + "rating/" + summary.getYear() + "/" + summary.getSemester() + "/" + summary.getDepartment() + "/" + summary.getNumber() + "?client=" + rating.getId();
+    StringRequest ratingRequest =
+            new StringRequest(
+                    Request.Method.POST,
+                    url,
+                    response -> {
+                      callbacks.yourRating(summary, rating);
+                    },
+                    error -> Log.e(TAG, error.toString())) {
+              @Override
+              public byte[] getBody() throws AuthFailureError {
+                try {
+                  return objectMapper.writeValueAsString(rating).getBytes();
+                } catch (JsonProcessingException e) {
+                   return e.toString().getBytes();
+                }
+              }
+            };
+    requestQueue.add(ratingRequest);
   }
 
   private static Client instance;

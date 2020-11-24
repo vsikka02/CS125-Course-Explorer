@@ -1,18 +1,22 @@
 package edu.illinois.cs.cs125.fall2020.mp.network;
 
 import androidx.annotation.NonNull;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
-import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
+
+import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
+import edu.illinois.cs.cs125.fall2020.mp.models.Rating;
+import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -68,6 +72,42 @@ public final class Server extends Dispatcher {
     return new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(course);
   }
 
+  private final Map<Summary, Map<String, Rating>> ratings = new HashMap<>();
+  private MockResponse getRating(@NonNull final String path) throws JsonProcessingException {
+    String[] urlParts = path.split("\\?client=");
+    String[] parts = urlParts[0].split("/");
+    if (parts.length != courseUrlLength || urlParts.length != 2) {
+      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
+    }
+    Summary searchSummary = new Summary(parts[0], parts[1], parts[2], parts[3], "searchSummary");
+    String searchUUID = urlParts[1];
+    if (ratings.get(searchSummary) == null) {
+      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND);
+    }
+    ObjectMapper objectMapper = new ObjectMapper();
+    Rating defaultRating = new Rating(searchUUID, Rating.NOT_RATED);
+    Rating rating = ratings.get(searchSummary).getOrDefault(searchUUID, defaultRating);
+    String ratingDetails = objectMapper.writeValueAsString(rating);
+    return new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(ratingDetails);
+  }
+
+  private MockResponse postRating(@NonNull final String path) throws JsonProcessingException {
+    String[] urlParts = path.split("\\?client=");
+    String[] parts = urlParts[0].split("/");
+    if (parts.length + urlParts.length != 6) {
+      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
+    }
+    Summary searchSummary = new Summary(parts[0], parts[1], parts[2], parts[3], "searchSummary");
+    String searchUUID = urlParts[1];
+    if (ratings.get(searchSummary) == null) {
+      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND);
+    }
+    ObjectMapper objectMapper = new ObjectMapper();
+    Rating defaultRating = new Rating(searchUUID, Rating.NOT_RATED);
+    Rating rating = ratings.get(searchSummary).getOrDefault(searchUUID, defaultRating);
+    String ratingDetails = objectMapper.writeValueAsString(rating);
+    return new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(ratingDetails);
+  }
   @NonNull
   @Override
   public MockResponse dispatch(@NonNull final RecordedRequest request) {
@@ -80,7 +120,14 @@ public final class Server extends Dispatcher {
       } else if (path.startsWith("/summary/")) {
         return getSummary(path.replaceFirst("/summary/", ""));
       } else if (path.startsWith("/course/")) {
-        return getCourse(path.replaceFirst("/course/", ""));
+        return getCourse(path.replaceFirst("/cours/", ""));
+      } else if (path.startsWith("/rating/")) {
+        if (request.getMethod() == "GET") {
+          return getRating(path.replaceFirst("/rating/", ""));
+        } else if (request.getMethod() == "POST") {
+          return postRating(path.replaceFirst("/rating/", ""));
+        }
+        return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
       }
       return new MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND);
     } catch (Exception e) {

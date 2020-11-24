@@ -3,19 +3,24 @@ package edu.illinois.cs.cs125.fall2020.mp.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import edu.illinois.cs.cs125.fall2020.mp.R;
+import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
 import edu.illinois.cs.cs125.fall2020.mp.databinding.ActivityCourseBinding;
 import edu.illinois.cs.cs125.fall2020.mp.models.Course;
 import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
 import edu.illinois.cs.cs125.fall2020.mp.network.Client;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 /** Course activity showing the description and title for course. */
 public class CourseActivity extends AppCompatActivity implements Client.CourseClientCallbacks {
@@ -28,11 +33,13 @@ public class CourseActivity extends AppCompatActivity implements Client.CourseCl
 
   private Course course;
 
+
   /** @param savedInstanceState */
   @Override
   public void onCreate(@Nullable final Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-
+    CourseableApplication application = (CourseableApplication) getApplication();
+    application.getCourseClient();
     Log.i(TAG, "Course Activity Started");
 
     Intent intent = getIntent();
