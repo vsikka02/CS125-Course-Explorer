@@ -148,17 +148,17 @@ public final class Client {
             new StringRequest(
                     Request.Method.POST,
                     url,
-                    response -> {
-                      callbacks.yourRating(summary, rating);
-                    },
+                    response -> { callbacks.yourRating(summary, rating); },
                     error -> Log.e(TAG, error.toString())) {
               @Override
               public byte[] getBody() throws AuthFailureError {
+                String ratingDetails = null;
                 try {
-                  return objectMapper.writeValueAsString(rating).getBytes();
+                  ratingDetails = objectMapper.writeValueAsString(rating);
                 } catch (JsonProcessingException e) {
-                   return e.toString().getBytes();
+                  e.printStackTrace();
                 }
+                return ratingDetails.getBytes();
               }
             };
     requestQueue.add(ratingRequest);

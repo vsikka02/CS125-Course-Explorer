@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.UUID;
 
 import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
 import edu.illinois.cs.cs125.fall2020.mp.models.Rating;
@@ -39,7 +40,7 @@ public final class Server extends Dispatcher {
 
   private final Map<String, String> summaries = new HashMap<>();
 
-  //private final int courseUrlLength = 4;
+  private final int courseUrlLength = 4;
 
   // summary/2020/fall
   private MockResponse getSummary(@NonNull final String path) {
@@ -61,7 +62,7 @@ public final class Server extends Dispatcher {
   // course/year/semester/department/number
   private MockResponse getCourse(@NonNull final String path) {
     String[] parts = path.split("/");
-    if (parts.length != 4) {
+    if (parts.length != courseUrlLength) {
       return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
     }
     Summary searchSummary = new Summary(parts[0], parts[1], parts[2], parts[3], "searchSummary");
@@ -72,6 +73,16 @@ public final class Server extends Dispatcher {
     return new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(course);
   }
 
+  public static boolean isUUID(String string) {
+    try {
+      UUID.fromString(string);
+      return true;
+    } catch (Exception ex) {
+      return false;
+    }
+  }
+
+
   private final Map<Summary, Map<String, Rating>> ratings = new HashMap<>();
   private MockResponse getRating(@NonNull final String path) throws JsonProcessingException {
     String[] urlParts = path.split("\\?client=");
@@ -79,35 +90,56 @@ public final class Server extends Dispatcher {
     if (parts.length != courseUrlLength || urlParts.length != 2) {
       return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
     }
+    if (!isUUID(urlParts[1])) {
+      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
+    }
     Summary searchSummary = new Summary(parts[0], parts[1], parts[2], parts[3], "searchSummary");
-    String searchUUID = urlParts[1];
-    if (ratings.get(searchSummary) == null) {
+    String course = courses.get(searchSummary);
+    if (course == null) {
       return new MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND);
     }
-    ObjectMapper objectMapper = new ObjectMapper();
+    String searchUUID = urlParts[1];
+    if (ratings.get(searchSummary) == null) {
+      Map<String, Rating> inner = new HashMap<>();
+      ratings.put(searchSummary, inner);
+    }
     Rating defaultRating = new Rating(searchUUID, Rating.NOT_RATED);
     Rating rating = ratings.get(searchSummary).getOrDefault(searchUUID, defaultRating);
+    ObjectMapper objectMapper = new ObjectMapper();
     String ratingDetails = objectMapper.writeValueAsString(rating);
     return new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(ratingDetails);
   }
 
-  private MockResponse postRating(@NonNull final String path) throws JsonProcessingException {
+  private MockResponse postRating(@NonNull final String path, @NonNull final RecordedRequest request) throws JsonProcessingException {
     String[] urlParts = path.split("\\?client=");
     String[] parts = urlParts[0].split("/");
-    if (parts.length + urlParts.length != 6) {
+    if (parts.length != courseUrlLength || urlParts.length != 2) {
+      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
+    }
+    if (!isUUID(urlParts[1])) {
+      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
+    }
+    String searchUUID = urlParts[1];
+    String ratingDetails = request.getBody().readUtf8();
+
+    Rating rating;
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      rating = objectMapper.readValue(ratingDetails, Rating.class);
+    } catch (JsonProcessingException e){
+      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
+    }
+    if (!(rating.getId().equals(searchUUID))) {
       return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
     }
     Summary searchSummary = new Summary(parts[0], parts[1], parts[2], parts[3], "searchSummary");
-    String searchUUID = urlParts[1];
-    if (ratings.get(searchSummary) == null) {
-      return new MockResponse().setResponseCode(HttpURLConnection.HTTP_NOT_FOUND);
+    if (ratings.get(searchSummary).get(searchUUID) == null) {
+      ratings.get(searchSummary).put(searchUUID, rating);
     }
-    ObjectMapper objectMapper = new ObjectMapper();
-    Rating defaultRating = new Rating(searchUUID, Rating.NOT_RATED);
-    Rating rating = ratings.get(searchSummary).getOrDefault(searchUUID, defaultRating);
-    String ratingDetails = objectMapper.writeValueAsString(rating);
-    return new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(ratingDetails);
+    ratings.get(searchSummary).put(searchUUID, rating);
+    return new MockResponse().setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP).addHeader("Location: " + parts[3] + "?client=" + searchUUID);
   }
+
   @NonNull
   @Override
   public MockResponse dispatch(@NonNull final RecordedRequest request) {
@@ -120,12 +152,12 @@ public final class Server extends Dispatcher {
       } else if (path.startsWith("/summary/")) {
         return getSummary(path.replaceFirst("/summary/", ""));
       } else if (path.startsWith("/course/")) {
-        return getCourse(path.replaceFirst("/cours/", ""));
+        return getCourse(path.replaceFirst("/course/", ""));
       } else if (path.startsWith("/rating/")) {
-        if (request.getMethod() == "GET") {
-          return getRating(path.replaceFirst("/rating/", ""));
-        } else if (request.getMethod() == "POST") {
-          return postRating(path.replaceFirst("/rating/", ""));
+        if (request.getMethod().equals("GET")) {
+          return getRating(path.replace("/rating/", ""));
+        } else if (request.getMethod().equals("POST")) {
+          return postRating(path.replace("/rating/", ""), request);
         }
         return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
       }

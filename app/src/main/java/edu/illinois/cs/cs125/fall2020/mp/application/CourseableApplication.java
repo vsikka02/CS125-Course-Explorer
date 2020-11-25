@@ -1,7 +1,6 @@
 package edu.illinois.cs.cs125.fall2020.mp.application;
 
 import android.app.Application;
-import android.util.Log;
 
 import java.util.UUID;
 
@@ -28,7 +27,6 @@ public class CourseableApplication extends Application {
 
   @Override
   public final void onCreate() {
-    Log.d("Client ID", clientID);
     super.onCreate();
     client = Client.start();
     Server.start();
@@ -48,5 +46,6 @@ public class CourseableApplication extends Application {
    *
    * @return the course API clientID instance.
    */
+
   public final String getCourseClientID() { return clientID; }
 }
