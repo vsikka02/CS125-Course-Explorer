@@ -1,9 +1,13 @@
 package edu.illinois.cs.cs125.fall2020.mp;
 
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.actionWithAssertions;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static com.google.common.truth.Truth.assertThat;
+
 import android.content.Intent;
 import android.view.View;
 import android.widget.RatingBar;
-
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
@@ -13,21 +17,18 @@ import androidx.test.espresso.ViewAssertion;
 import androidx.test.espresso.assertion.ViewAssertions;
 import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.apache.http.HttpStatus;
-import org.hamcrest.Matcher;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-import org.robolectric.annotation.LooperMode;
-
+import edu.illinois.cs.cs125.fall2020.mp.activities.CourseActivity;
+import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
+import edu.illinois.cs.cs125.fall2020.mp.models.Rating;
+import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
+import edu.illinois.cs.cs125.fall2020.mp.network.Client;
+import edu.illinois.cs.cs125.fall2020.mp.network.Server;
+import edu.illinois.cs.cs125.gradlegrader.annotations.Graded;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,25 +41,19 @@ import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
-import edu.illinois.cs.cs125.fall2020.mp.activities.CourseActivity;
-import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
-import edu.illinois.cs.cs125.fall2020.mp.models.Rating;
-import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
-import edu.illinois.cs.cs125.fall2020.mp.network.Client;
-import edu.illinois.cs.cs125.fall2020.mp.network.Server;
-import edu.illinois.cs.cs125.gradlegrader.annotations.Graded;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.actionWithAssertions;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static com.google.common.truth.Truth.assertThat;
+import org.apache.http.HttpStatus;
+import org.hamcrest.Matcher;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+import org.robolectric.annotation.LooperMode;
 
 /*
  * This is the MP2 test suite.
@@ -359,7 +354,6 @@ public final class MP2Test {
               .build();
       response = client.newCall(request).execute();
       assertThat(response.code()).isEqualTo(HttpStatus.SC_BAD_REQUEST);
-
     }
   }
 

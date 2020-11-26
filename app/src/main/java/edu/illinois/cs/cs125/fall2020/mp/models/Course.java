@@ -1,18 +1,18 @@
 package edu.illinois.cs.cs125.fall2020.mp.models;
 
-/** Model holding each individual course description shown in the CourseActivity.**/
+/** Model holding each individual course description shown in the CourseActivity. **/
 public class Course extends Summary {
   private String description;
 
   /**
    * Get the description for this Course.
    *
-   * @return the year for this Course
+   * @return the year for this Course.
    */
   public final String getDescription() {
     return description;
   }
-  /** Create an empty Course.**/
+  /** Create an empty Course. **/
   public Course() {}
 
   /**

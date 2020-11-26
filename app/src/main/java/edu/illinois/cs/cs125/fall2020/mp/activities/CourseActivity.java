@@ -37,7 +37,6 @@ public class CourseActivity extends AppCompatActivity implements Client.CourseCl
 
   private Rating rating;
 
-
   /** @param savedInstanceState */
   @Override
   public void onCreate(@Nullable final Bundle savedInstanceState) {
@@ -65,14 +64,15 @@ public class CourseActivity extends AppCompatActivity implements Client.CourseCl
               });
       CompletableFuture<Rating> completableFuture2 = new CompletableFuture<>();
       Client.start()
-              .getRating(
-                      summary, application.getCourseClientID(),
-                      new Client.CourseClientCallbacks() {
-                        @Override
-                        public void yourRating(Summary summary2, Rating rating2) {
-                          completableFuture2.complete(rating2);
-                        }
-                      });
+          .getRating(
+              summary,
+              application.getCourseClientID(),
+              new Client.CourseClientCallbacks() {
+                @Override
+                public void yourRating(final Summary summary2, final Rating rating2) {
+                  completableFuture2.complete(rating2);
+                }
+              });
 
       try {
         course = completableFuture.get();
@@ -87,17 +87,22 @@ public class CourseActivity extends AppCompatActivity implements Client.CourseCl
       binding.title.setText(Summary.fullCourseString(course));
       binding.description.setText(course.getDescription());
       binding.rating.setRating((float) rating.getRating());
-      binding.rating.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-        @Override
-        public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
-          Client.start().postRating(summary, new Rating(application.getCourseClientID(), v), new Client.CourseClientCallbacks() {
+      binding.rating.setOnRatingBarChangeListener(
+          new RatingBar.OnRatingBarChangeListener() {
             @Override
-            public void yourRating(Summary summary, Rating rating) {
-              completableFuture2.complete(rating);
+            public void onRatingChanged(final RatingBar ratingBar, final float v, final boolean b) {
+              Client.start()
+                  .postRating(
+                      summary,
+                      new Rating(application.getCourseClientID(), v),
+                      new Client.CourseClientCallbacks() {
+                        @Override
+                        public void yourRating(final Summary summary3, final Rating rating3) {
+                          completableFuture2.complete(rating3);
+                        }
+                      });
             }
           });
-        }
-      });
 
     } catch (JsonProcessingException e) {
       e.printStackTrace();

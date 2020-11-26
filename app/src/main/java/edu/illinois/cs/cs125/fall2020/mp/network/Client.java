@@ -58,9 +58,14 @@ public final class Client {
      * @param summary
      * @param course
      */
-    default void courseResponse(Summary summary, Course course) { }
+    default void courseResponse(Summary summary, Course course) {}
 
-    default void yourRating(Summary summary, Rating rating) { }
+    /**
+     * Return a Rating object (rating) for the given Summary object (summary).
+     * @param summary
+     * @param rating
+     */
+    default void yourRating(Summary summary, Rating rating) {}
   }
 
   /**
@@ -97,7 +102,8 @@ public final class Client {
    * @param summary the summary that needs to retrieve extra information
    * @param callbacks the callback that will receive the result
    */
-  public void getCourse(@NonNull final Summary summary, @NonNull final CourseClientCallbacks callbacks) {
+  public void getCourse(
+      @NonNull final Summary summary, @NonNull final CourseClientCallbacks callbacks) {
     String url =
         CourseableApplication.SERVER_URL
             + "course/"
@@ -124,43 +130,85 @@ public final class Client {
     requestQueue.add(courseRequest);
   }
 
-  public void getRating(@NonNull final Summary summary, @NonNull final String clientID, @NonNull final CourseClientCallbacks callbacks){
-    String url = CourseableApplication.SERVER_URL + "rating/" + summary.getYear() + "/" + summary.getSemester() + "/" + summary.getDepartment() + "/" + summary.getNumber() + "?client=" + clientID;
+  /**
+   * Retrieve the Rating object for a given summary object and clientID.
+   * @param summary
+   * @param clientID
+   * @param callbacks
+   */
+  public void getRating(
+      @NonNull final Summary summary,
+      @NonNull final String clientID,
+      @NonNull final CourseClientCallbacks callbacks) {
+    String url =
+        CourseableApplication.SERVER_URL
+            + "rating/"
+            + summary.getYear()
+            + "/"
+            + summary.getSemester()
+            + "/"
+            + summary.getDepartment()
+            + "/"
+            + summary.getNumber()
+            + "?client="
+            + clientID;
     StringRequest ratingRequest =
-            new StringRequest(
-                    Request.Method.GET,
-                    url,
-                    response -> {
-                      try {
-                        Rating ratingDetails = objectMapper.readValue(response, Rating.class);
-                        callbacks.yourRating(summary, ratingDetails);
-                      } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                      }
-                    },
-                    error -> Log.e(TAG, error.toString()));
+        new StringRequest(
+            Request.Method.GET,
+            url,
+            response -> {
+              try {
+                Rating ratingDetails = objectMapper.readValue(response, Rating.class);
+                callbacks.yourRating(summary, ratingDetails);
+              } catch (JsonProcessingException e) {
+                e.printStackTrace();
+              }
+            },
+            error -> Log.e(TAG, error.toString()));
     requestQueue.add(ratingRequest);
   }
 
-  public void postRating(@NonNull final Summary summary, @NonNull final Rating rating, @NonNull final CourseClientCallbacks callbacks){
-    String url = CourseableApplication.SERVER_URL + "rating/" + summary.getYear() + "/" + summary.getSemester() + "/" + summary.getDepartment() + "/" + summary.getNumber() + "?client=" + rating.getId();
+  /**
+   * Post the rating that is inputted by the User given a Rating object and Summary object.
+   * @param summary
+   * @param rating
+   * @param callbacks
+   */
+  public void postRating(
+      @NonNull final Summary summary,
+      @NonNull final Rating rating,
+      @NonNull final CourseClientCallbacks callbacks) {
+    String url =
+        CourseableApplication.SERVER_URL
+            + "rating/"
+            + summary.getYear()
+            + "/"
+            + summary.getSemester()
+            + "/"
+            + summary.getDepartment()
+            + "/"
+            + summary.getNumber()
+            + "?client="
+            + rating.getId();
     StringRequest ratingRequest =
-            new StringRequest(
-                    Request.Method.POST,
-                    url,
-                    response -> { callbacks.yourRating(summary, rating); },
-                    error -> Log.e(TAG, error.toString())) {
-              @Override
-              public byte[] getBody() throws AuthFailureError {
-                String ratingDetails = null;
-                try {
-                  ratingDetails = objectMapper.writeValueAsString(rating);
-                } catch (JsonProcessingException e) {
-                  e.printStackTrace();
-                }
-                return ratingDetails.getBytes();
-              }
-            };
+        new StringRequest(
+            Request.Method.POST,
+            url,
+            response -> {
+              callbacks.yourRating(summary, rating);
+            },
+            error -> Log.e(TAG, error.toString())) {
+          @Override
+          public byte[] getBody() throws AuthFailureError {
+            String ratingDetails = null;
+            try {
+              ratingDetails = objectMapper.writeValueAsString(rating);
+            } catch (JsonProcessingException e) {
+              e.printStackTrace();
+            }
+            return ratingDetails.getBytes();
+          }
+        };
     requestQueue.add(ratingRequest);
   }
 

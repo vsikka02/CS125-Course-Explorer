@@ -73,7 +73,12 @@ public final class Server extends Dispatcher {
     return new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(course);
   }
 
-  public static boolean isUUID(String string) {
+  /**
+   * This function validates the UUID that is inputted into the URL's.
+   * @param string
+   * @return True or False depending on whether the UUID inputted is valid or not.
+   */
+  public static boolean isUUID(final String string) {
     try {
       UUID.fromString(string);
       return true;
@@ -82,8 +87,8 @@ public final class Server extends Dispatcher {
     }
   }
 
-
   private final Map<Summary, Map<String, Rating>> ratings = new HashMap<>();
+
   private MockResponse getRating(@NonNull final String path) throws JsonProcessingException {
     String[] urlParts = path.split("\\?client=");
     String[] parts = urlParts[0].split("/");
@@ -110,7 +115,9 @@ public final class Server extends Dispatcher {
     return new MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(ratingDetails);
   }
 
-  private MockResponse postRating(@NonNull final String path, @NonNull final RecordedRequest request) throws JsonProcessingException {
+  private MockResponse postRating(
+      @NonNull final String path, @NonNull final RecordedRequest request)
+      throws JsonProcessingException {
     String[] urlParts = path.split("\\?client=");
     String[] parts = urlParts[0].split("/");
     if (parts.length != courseUrlLength || urlParts.length != 2) {
@@ -126,7 +133,7 @@ public final class Server extends Dispatcher {
     try {
       ObjectMapper objectMapper = new ObjectMapper();
       rating = objectMapper.readValue(ratingDetails, Rating.class);
-    } catch (JsonProcessingException e){
+    } catch (JsonProcessingException e) {
       return new MockResponse().setResponseCode(HttpURLConnection.HTTP_BAD_REQUEST);
     }
     if (!(rating.getId().equals(searchUUID))) {
@@ -137,7 +144,9 @@ public final class Server extends Dispatcher {
       ratings.get(searchSummary).put(searchUUID, rating);
     }
     ratings.get(searchSummary).put(searchUUID, rating);
-    return new MockResponse().setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP).addHeader("Location: " + parts[3] + "?client=" + searchUUID);
+    return new MockResponse()
+        .setResponseCode(HttpURLConnection.HTTP_MOVED_TEMP)
+        .addHeader("Location: " + parts[3] + "?client=" + searchUUID);
   }
 
   @NonNull
