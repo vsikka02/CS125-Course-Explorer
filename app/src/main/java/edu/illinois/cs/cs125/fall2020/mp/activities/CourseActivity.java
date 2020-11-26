@@ -3,6 +3,7 @@ package edu.illinois.cs.cs125.fall2020.mp.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.RatingBar;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import edu.illinois.cs.cs125.fall2020.mp.R;
 import edu.illinois.cs.cs125.fall2020.mp.application.CourseableApplication;
 import edu.illinois.cs.cs125.fall2020.mp.databinding.ActivityCourseBinding;
 import edu.illinois.cs.cs125.fall2020.mp.models.Course;
+import edu.illinois.cs.cs125.fall2020.mp.models.Rating;
 import edu.illinois.cs.cs125.fall2020.mp.models.Summary;
 import edu.illinois.cs.cs125.fall2020.mp.network.Client;
 
@@ -32,6 +34,8 @@ public class CourseActivity extends AppCompatActivity implements Client.CourseCl
   private Summary summary;
 
   private Course course;
+
+  private Rating rating;
 
 
   /** @param savedInstanceState */
@@ -59,9 +63,20 @@ public class CourseActivity extends AppCompatActivity implements Client.CourseCl
                   completableFuture.complete(course1);
                 }
               });
+      CompletableFuture<Rating> completableFuture2 = new CompletableFuture<>();
+      Client.start()
+              .getRating(
+                      summary, application.getCourseClientID(),
+                      new Client.CourseClientCallbacks() {
+                        @Override
+                        public void yourRating(Summary summary2, Rating rating2) {
+                          completableFuture2.complete(rating2);
+                        }
+                      });
 
       try {
         course = completableFuture.get();
+        rating = completableFuture2.get();
       } catch (ExecutionException e) {
         e.printStackTrace();
       } catch (InterruptedException e) {
@@ -71,6 +86,19 @@ public class CourseActivity extends AppCompatActivity implements Client.CourseCl
       binding = DataBindingUtil.setContentView(this, R.layout.activity_course);
       binding.title.setText(Summary.fullCourseString(course));
       binding.description.setText(course.getDescription());
+      binding.rating.setRating((float) rating.getRating());
+      binding.rating.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+        @Override
+        public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
+          Client.start().postRating(summary, new Rating(application.getCourseClientID(), v), new Client.CourseClientCallbacks() {
+            @Override
+            public void yourRating(Summary summary, Rating rating) {
+              completableFuture2.complete(rating);
+            }
+          });
+        }
+      });
+
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
